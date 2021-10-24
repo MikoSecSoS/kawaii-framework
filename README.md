@@ -46,10 +46,10 @@ pip install -r requirements.txt
 写完的话搜索方式大概是下面几种。
 
 - \[x\] 无登录获取内容
-- \[ \] Cookie登录获取内容
+- \[x\] Cookie登录获取内容
 - \[ \] 账号登录获取内容
 - \[ \] 使用api获取内容
 
-![kwaii-framework](https://z3.ax1x.com/2021/10/23/5gKn8U.png)
+![kwaii-framework](https://z3.ax1x.com/2021/10/24/5RXnsg.png)
 
-![5gKu2F.png](https://z3.ax1x.com/2021/10/23/5gKu2F.png)
+![kwaii-framework1](https://z3.ax1x.com/2021/10/24/5RX3iq.png)
