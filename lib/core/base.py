@@ -1,8 +1,7 @@
 # -*- coding:utf-8 -*-
+import warnings
 
 from lib.config import __platform__, __version__, __prompt__
-
-from importlib import import_module
 
 from rich import box
 from colorama import init
@@ -12,6 +11,8 @@ from prompt_toolkit.completion import NestedCompleter
 
 if __platform__ == "Windows":
     init()
+
+warnings.filterwarnings('ignore')
 
 class BaseInterpreter(object):
     """docstring for BaseInterpreter"""
@@ -24,7 +25,6 @@ class BaseInterpreter(object):
         self.prompt = __prompt__
         self.using_module = " "
         self.prompt_char = ">"
-        self.flag = "Kawaii-Framework " + __version__
         self.module_path = "modules"
 
         self.matching_modules_dict = {

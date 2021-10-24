@@ -52,6 +52,7 @@ class KawaiiInterpreter(Parser):
             "options": None,
             "use": None
         })
+
     def console(self):
         while 1:
             try:

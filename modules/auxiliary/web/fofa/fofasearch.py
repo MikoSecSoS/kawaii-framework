@@ -2,13 +2,11 @@
 
 import os
 import sys
-import copy
 
-import requests
-import prettytable as pt
-
+from lib.file import save2csv
 from lib.core.parser import Parser
 from lib.core.console import KawaiiInterpreter
+from lib.request import grequests, requests, ProgressSession, HEADERS
 
 from base64 import b64encode
 from html import unescape
@@ -16,11 +14,7 @@ from html import unescape
 from faker import Faker
 from termcolor import colored
 from rich import box
-from rich.table import Table
-from rich.console import Console
-from prompt_toolkit import prompt, ANSI
 from prompt_toolkit.completion import NestedCompleter
-from prompt_toolkit.history import InMemoryHistory
 
 class FofaSearch(KawaiiInterpreter):
     """docstring for FofaSearch"""
@@ -43,11 +37,13 @@ class FofaSearch(KawaiiInterpreter):
         self.PAGE = "1"
         self.PAGESIZE = "10"
         self.PASSWORD = ""
-        self.UA = self.flag
+
+        self.UA = HEADERS.UA
         #----------------------------------------------------------------------------
         self.fofa_search_url = "https://api.fofa.so/v1/search"
-        self.session = requests.Session()
-        self.session.headers = {"User-Agent": self.UA}
+        self.fofa_key_searh_url = "https://fofa.so/api/v1/search/all"
+        self.session = grequests.Session()
+        self.session.headers["User-Agent"] = self.UA
         #----------------------------------------------------------------------------
         
         self.global_options_dict = {
@@ -80,7 +76,7 @@ class FofaSearch(KawaiiInterpreter):
                 ["UA", self.UA, "No", "Request User-Agent(random)"],
             ]
         }
-        options = copy.deepcopy(self.completer.options)
+        options = self.completer.options
         options["set"] = {data[0]:None for data in self.global_options_dict["data"]}
         self.completer = NestedCompleter.from_nested_dict(options)
 
@@ -268,42 +264,73 @@ Exploit Commands
 
             yield data_dict
 
+    def fofa_key_search(self, qbase64, pn):
+        params = {
+            "email": self.EMAIL,
+            "key": self.KEY,
+            "qbase64": qbase64
+        }
+
+    def myhander(self, request, exception):
+        print(f"exception thrown by grequests: \n{exception}")
+        return request
+
+    def fofa_search(self, qbase64, pn):
+        with ProgressSession(pn, self.session) as sess:
+            req_list = []
+            for pn in range(1, pn):
+                params = {
+                    'q': self.CONTENT,
+                    'qbase64': qbase64,
+                    'full': 'true',
+                    'pn': pn,
+                    'ps': self.PAGESIZE
+                }
+                req = grequests.get(self.fofa_search_url, params=params, session=sess)
+                # req = grequests.get("http://httpbin.org/get", params=params, session=sess)
+                req_list.append(req)
+            res_list = grequests.map(req_list, exception_handler=self.myhander)
+            for res in res_list:
+                if isinstance(res, requests.models.Response):
+                    yield self.parse_json_data(res.json())
+        
+
     def exploit(self):
-        print(colored("[*]", "blue") + " Module started successfully")
+        print(colored("[*]", "blue") + " Module started successfully.")
 
         isPage = lambda n: int(n)+1 if n.isdigit() else 0
 
-        columns = []       
-        datas = []
-
         qbase64 = b64encode(self.CONTENT.encode()).decode()
         pn = isPage(self.PAGE)
-        for pn in range(1, pn):
-            print(colored("[*]", "blue") + " Search fofa page => {}".format(pn))
-            params = {
-                'q': self.CONTENT,
-                'qbase64': qbase64,
-                'full': 'true',
-                'pn': pn,
-                'ps': self.PAGESIZE
-            }
-            req = self.session.get(self.fofa_search_url, params=params)
-            data_yield = self.parse_json_data(req.json())
+
+        if not pn:
+            print(colored("[-]", "red") + " PAGE => `{}` not is number.".fotmat(self.PAGE))
+            return
+
+        if self.MODE == "key":
+            result = self.fofa_key_search(qbase64, pn)
+        else:
+            result = self.fofa_search(qbase64, pn)
+        datas = []
+        columns = []
+
+        print(colored("[*]", "blue") + " Search done.")
+
+        for data_yield in result:
             for data in data_yield:
                 if not columns:
                     for key in data.keys():
                         columns.append({
-                            "header":key,
+                            "header": key,
                             "justify": "center",
                             "overflow": "ignore"
                         })
-                if data:
-                    datas.append(list(data.values()))
-
-        print(colored("[*]", "blue") + " Search done.")
+                datas.append(list(data.values()))
 
         if not datas:
+            print(colored("[-]", "red") + " Search result is null.")
             return
+
         datas_dict = {
             "title": {
                 "title": "",
@@ -315,12 +342,8 @@ Exploit Commands
             "data": datas
         }
         self.rich_print_table(datas_dict)
-        # self.print_table(datas_dict, max_width={"标题": 20})
-        # tb = pt.PrettyTable()
-        # tb.field_names = list(datas[0].keys())
-        # for data in datas:
-        #     tb.add_row(list(data.values()))
-        # print(tb)
+        if self.FILE.lower().endswith(".csv"):
+            save2csv(self.FILE, [col["header"] for col in columns], datas)
 
     def run(self):
         check_out = self.check_options()

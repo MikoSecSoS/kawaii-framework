@@ -115,7 +115,6 @@ Module Commands
             module = self.matching_modules_dict["data"][num][1]
         logging.debug("Use module => {}".format(module))
 
-        # abspath = os.path.join(module_path, module+".py")
         module_import = "modules" + "." + module.replace("/", ".")
         try:
             used_module = import_module(module_import)

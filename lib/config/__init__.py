@@ -3,7 +3,8 @@ from termcolor import colored
 
 __platform__ = system()
 __prompt__ = "Kawaii"
-__version__ = "v1.2.1.211024-beta-"
+__framework__ = "Kawaii-Framework"
+__version__ = "v1.2.1.211024-dev-"
 __baseBanner__ = r"""
  ____  __.                     .__.__ 
 |    |/ _|____ __  _  _______  |__|__|
