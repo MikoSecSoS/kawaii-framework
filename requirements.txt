@@ -1,0 +1,9 @@
+prompt_toolkit
+requests
+colorma
+logging
+rich
+faker
+termcolor
+colorama
+bs4
