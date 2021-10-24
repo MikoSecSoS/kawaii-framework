@@ -1,39 +1,32 @@
 # -*- coding:utf-8 -*-
 
+import copy
 import os
 import sys
-import copy
-
-import requests
-import prettytable as pt
-
-from lib.core.parser import Parser
-from lib.core.console import KawaiiInterpreter
-
 from base64 import b64encode
 from html import unescape
 
+import requests
 from faker import Faker
-from termcolor import colored
-from rich import box
-from rich.table import Table
-from rich.console import Console
-from prompt_toolkit import prompt, ANSI
 from prompt_toolkit.completion import NestedCompleter
-from prompt_toolkit.history import InMemoryHistory
+from rich import box
+from termcolor import colored
+
+from lib.core.console import KawaiiInterpreter
+
 
 class FofaSearch(KawaiiInterpreter):
     """docstring for FofaSearch"""
 
     def __init__(self):
         super(FofaSearch, self).__init__()
-        module_type, module_path = __file__.split(self.module_path+os.sep)[-1].replace(".py", "").split(os.sep, 1)
+        module_type, module_path = __file__.split(self.module_path + os.sep)[-1].replace(".py", "").split(os.sep, 1)
         using_module = " {module_type}({module_path}) ".format(
-                                        module_type=module_type,
-                                        module_path=colored(module_path.replace(os.sep, "/"), "red")
-                                    )
+            module_type=module_type,
+            module_path=colored(module_path.replace(os.sep, "/"), "red")
+        )
         self.using_module = using_module
-        #----------------------------------------------------------------------------
+        # ----------------------------------------------------------------------------
         self.CONTENT = ""
         self.AUTH = ""
         self.EMAIL = ""
@@ -44,12 +37,12 @@ class FofaSearch(KawaiiInterpreter):
         self.PAGESIZE = "10"
         self.PASSWORD = ""
         self.UA = self.flag
-        #----------------------------------------------------------------------------
+        # ----------------------------------------------------------------------------
         self.fofa_search_url = "https://api.fofa.so/v1/search"
         self.session = requests.Session()
         self.session.headers = {"User-Agent": self.UA}
-        #----------------------------------------------------------------------------
-        
+        # ----------------------------------------------------------------------------
+
         self.global_options_dict = {
             "title": {
                 "title": "Module options ({})".format(self.using_module),
@@ -58,14 +51,14 @@ class FofaSearch(KawaiiInterpreter):
                 "box": box.MINIMAL_DOUBLE_HEAD
             },
             "columns": [{
-                    "header": "Name",
-                },{
-                    "header":"Current Setting",
-                },{
-                    "header":"Required",
-                },{
-                    "header":"Description",
-                }
+                "header": "Name",
+            }, {
+                "header": "Current Setting",
+            }, {
+                "header": "Required",
+            }, {
+                "header": "Description",
+            }
             ],
             "data": [
                 ["AUTH", self.AUTH, "No", "Fofa Authorization"],
@@ -81,7 +74,7 @@ class FofaSearch(KawaiiInterpreter):
             ]
         }
         options = copy.deepcopy(self.completer.options)
-        options["set"] = {data[0]:None for data in self.global_options_dict["data"]}
+        options["set"] = {data[0]: None for data in self.global_options_dict["data"]}
         self.completer = NestedCompleter.from_nested_dict(options)
 
     def help(self):
@@ -123,23 +116,6 @@ Exploit Commands
 """
         print(info)
 
-    # def update_super_init(self):
-        # self.completer = NestedCompleter.from_nested_dict({
-        #     "set": {data[0]:None for data in self.global_options_dict["data"]},
-        #     "show": {
-        #         "version": None,
-        #         "options": None,
-        #     },
-        #     "exit": None,
-        #     "help": None,
-        #     "quit": None,
-        #     "search": None,
-        #     "use": None,
-        # })
-        # self.completer.options["set"] = NestedCompleter.from_nested_dict({
-        #     "set": {data[0]:None for data in self.global_options_dict["data"]}
-        # })
-        
     def update_init(self):
         self.global_options_dict["data"] = [
             ["AUTH", self.AUTH, "No", "Fofa Authorization"],
@@ -182,7 +158,7 @@ Exploit Commands
         elif key == "ua":
             if value == "random":
                 fake = Faker()
-                self.UA = faker.ua
+                self.UA = fake.ua
                 self.session.headers["User-Agent"] = self.UA
 
         self.update_init()
@@ -225,7 +201,6 @@ Exploit Commands
 
         print(colored("[-]", "red") + " Unknown command: " + command)
 
-
     def check_options(self):
         data = self.global_options_dict["data"]
         for d in data:
@@ -233,7 +208,6 @@ Exploit Commands
                 print(colored("[-]") + " Not set " + colored(d[0], "green"))
                 return False
         return True
-
 
     def parse_json_data(self, data_raw):
         if not data_raw.get("data"):
@@ -271,9 +245,9 @@ Exploit Commands
     def exploit(self):
         print(colored("[*]", "blue") + " Module started successfully")
 
-        isPage = lambda n: int(n)+1 if n.isdigit() else 0
+        isPage = lambda n: int(n) + 1 if n.isdigit() else 0
 
-        columns = []       
+        columns = []
         datas = []
 
         qbase64 = b64encode(self.CONTENT.encode()).decode()
@@ -293,7 +267,7 @@ Exploit Commands
                 if not columns:
                     for key in data.keys():
                         columns.append({
-                            "header":key,
+                            "header": key,
                             "justify": "center",
                             "overflow": "ignore"
                         })
@@ -315,12 +289,6 @@ Exploit Commands
             "data": datas
         }
         self.rich_print_table(datas_dict)
-        # self.print_table(datas_dict, max_width={"标题": 20})
-        # tb = pt.PrettyTable()
-        # tb.field_names = list(datas[0].keys())
-        # for data in datas:
-        #     tb.add_row(list(data.values()))
-        # print(tb)
 
     def run(self):
         check_out = self.check_options()
