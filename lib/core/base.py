@@ -27,6 +27,46 @@ class BaseInterpreter(object):
         self.prompt_char = ">"
         self.module_path = "modules"
 
+        self.global_options_dict = {
+            "title": {
+                "title": "Global Options",
+                "show_header": True,
+                "style": "bold",
+                "box": box.MINIMAL_DOUBLE_HEAD
+            },
+            "columns": [{
+                    "header": "Option",
+                },{
+                    "header":"Current Setting",
+                },{
+                    "header":"Description",
+                }
+            ], 
+            "data": [
+                    ["Prompt", self.prompt, "The prompt string"],
+                    ["PromptChar", self.prompt_char, "The prompt character"],
+                ]
+        }
+
+        self.completer = NestedCompleter.from_nested_dict({
+            "set": {data[0]:None for data in self.global_options_dict["data"]},
+            "show": {
+                "version": None,
+                "options": None,
+            },
+            "cd": None,
+            "eval": None,
+            "exec": None,
+            "exit": None,
+            "quit": None,
+            "help": None,
+            "?": None,
+            "history": None,
+            "search": None,
+            "options": None,
+            "use": None
+        })
+
         self.matching_modules_dict = {
             "title": {
                 "title": "Matching Modules",
@@ -43,4 +83,3 @@ class BaseInterpreter(object):
             "data": [
             ], 
         }
-

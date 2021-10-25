@@ -209,47 +209,49 @@ Module Commands
     def parse_input(self, content_raw):
         """Parse console input content
         """
-        logging.debug("Content_raw => {}".format(content_raw))
-        content_split = re.sub(" +", " ", content_raw).split(" ", 1)
-        content_split = tuple(filter(lambda x:x!="", content_split))
-        if not content_split: return(None, None)
-        command_raw = content_split[0]
+        content_raw_lines = content_raw.split("\n")
+        for content_raw_line in content_raw_lines:
+            logging.debug("Content_raw => {}".format(content_raw_line))
+            content_split = re.sub(" +", " ", content_raw_line).split(" ", 1)
+            content_split = tuple(filter(lambda x:x!="", content_split))
+            if not content_split: yield (None, None); continue
+            command_raw = content_split[0]
 
-        command = self.parse_command(command_raw)
-        if not command: return (None, None)
-        command_name = command.__code__.co_name
-        command_arg_count = command.__code__.co_argcount - 1
+            command = self.parse_command(command_raw)
+            if not command: yield (None, None); continue
+            command_name = command.__code__.co_name
+            command_arg_count = command.__code__.co_argcount - 1
 
-        if command_arg_count < 1:
-            logging.debug("Command is {}".format(command_name))
-            return (command, None)
+            if command_arg_count < 1:
+                logging.debug("Command is {}".format(command_name))
+                yield (command, None); continue
 
-        default_parameters = command.__defaults__
+            default_parameters = command.__defaults__
 
-        if len(content_split) == 2:
-            args = content_split[1].split(" ", command_arg_count-1)
-            args_count = len(args)
-        else:
-            args = []
-            args_count = 0
+            if len(content_split) == 2:
+                args = content_split[1].split(" ", command_arg_count-1)
+                args_count = len(args)
+            else:
+                args = []
+                args_count = 0
 
-        # Minus default parameters.
-        if default_parameters:
-            default_arg_count = len(default_parameters)
-            required_arg_count = command_arg_count - default_arg_count
-        else:
-            required_arg_count = command_arg_count
+            # Minus default parameters.
+            if default_parameters:
+                default_arg_count = len(default_parameters)
+                required_arg_count = command_arg_count - default_arg_count
+            else:
+                required_arg_count = command_arg_count
 
-        if args_count < required_arg_count or args_count > command_arg_count:
-            print(colored("[-]", "red") + " Argument required. Args is {}".format(args))
-            print(colored("[*]", "blue") + " Required parameter count is {}".format(required_arg_count))
-            print(colored("[*]", "blue") +
-                " Parameters name for the {command_name} command are: {args_name}".format(
-                        command_name=command_name,
-                        args_name=", ".join(inspect.getfullargspec(command).args[1:])
+            if args_count < required_arg_count or args_count > command_arg_count:
+                print(colored("[-]", "red") + " Argument required. Args is {}".format(args))
+                print(colored("[*]", "blue") + " Required parameter count is {}".format(required_arg_count))
+                print(colored("[*]", "blue") +
+                    " Parameters name for the {command_name} command are: {args_name}".format(
+                            command_name=command_name,
+                            args_name=", ".join(inspect.getfullargspec(command).args[1:])
+                        )
                     )
-                )
-            return (None, None)
+                yield (None, None); continue
 
-        logging.debug("Funcion is {}, Args is {}".format(command_name, args))
-        return (command, args)
+            logging.debug("Funcion is {}, Args is {}".format(command_name, args))
+            yield (command, args)

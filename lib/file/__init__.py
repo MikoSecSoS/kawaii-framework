@@ -1,5 +1,6 @@
 import os
 import csv
+import codecs
 
 from termcolor import colored
 
@@ -9,11 +10,19 @@ if not os.path.exists(output_path):
     os.mkdir(output_path)
 
 def save2csv(filename, title, datas):
-    with open(output_path+filename, "w") as file:
-        writer = csv.writer(file, lineterminator="\n")
+    try:
+        with codecs.open(output_path+filename, "w", "utf_8_sig") as file:
+            writer = csv.writer(file, lineterminator="\n")
 
-        writer.writerow(title)
+            writer.writerow(title)
 
-        writer.writerows(datas)
+            writer.writerows(datas)
 
-    print(colored("[*]", "blue"), "Write Success")
+        print(colored("[*]", "blue"), "Write Success")
+    except PermissionError:
+        print(colored("[*]", "red"), "Write Failed, The file is being used.")
+        rewrite = input("Whether to rewrite?[Y/n]")
+        if rewrite.lower() != "y":
+            return
+        else:
+            save2csv(filename, title, datas)
