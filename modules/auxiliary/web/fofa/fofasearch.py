@@ -280,8 +280,6 @@ class FofaSearch(BaseModule):
 
         total_count = self.get_result_total_count(qbase64)
 
-        print(total_count)
-
         max_page = int(total_count/int(self.PAGESIZE))+1
 
         print(colored("[*]", "blue") + " Result total count is {}".format(total_count))
