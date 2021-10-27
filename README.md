@@ -1,6 +1,13 @@
 # kawaii-framework
 
 Kawaii Framework(卡哇伊框架)
+一款渗透测试框架
+
+未来打算
+
+1. 覆盖更广更深的模块用来减少渗透测试中的人力（长期维护）
+2. 增加一些api接口。让开发者更好的添加属于自己的模块。
+3. 解释型编程语言。让框架的更有意义，顺便完善一下自己的编译原理知识。
 
 # Quick Start
 
@@ -22,7 +29,7 @@ cd kwaii-framework
 pip install -r requirements.txt
 ```
 
-  
+
 # TODO
 
 - \[x\] 低劣的模块
