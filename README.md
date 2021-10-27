@@ -48,7 +48,7 @@ pip install -r requirements.txt
 - \[x\] 无登录获取内容
 - \[x\] AUTH登录获取内容
 - \[ \] 账号登录获取内容
-- \[ \] 使用api获取内容
+- \[x\] 使用api获取内容
 
 ![kawaii-framework](https://z3.ax1x.com/2021/10/24/5RXnsg.png)
 
