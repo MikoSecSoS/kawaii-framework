@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import warnings
 
-from lib.config import __platform__, __version__, __prompt__
+from lib.config import __platform__, __version__
 
 from rich import box
 from colorama import init
@@ -22,8 +22,8 @@ class BaseInterpreter(object):
         self.command_history = InMemoryHistory()
         self.prompt_session = PromptSession(history=self.command_history)
 
-        self.prompt = __prompt__
-        self.using_module = " "
+        self.prompt = "Kawaii"
+        self.using_module = ""
         self.prompt_char = ">"
         self.module_path = "modules"
 

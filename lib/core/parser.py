@@ -5,8 +5,7 @@ import re
 import sys
 import inspect
 
-import logging
-
+from lib.utils.log import lprint, colored
 from lib.config import __version__
 from lib.core.base import BaseInterpreter
 
@@ -14,11 +13,6 @@ from importlib import import_module
 
 from rich.table import Table
 from rich.console import Console
-from termcolor import colored
-
-logging.basicConfig(level=logging.INFO,
-            format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
-
 
 class Parser(BaseInterpreter):
     """docstring for Parser"""
@@ -79,7 +73,7 @@ Module Commands
         if self.matching_modules_dict["data"]:
             self.rich_print_table(self.matching_modules_dict)
         else:
-            print(colored("[-]", "red") + " No results from search")
+            lprint("error", "No results from search")
 
     def chdir(self, dir_):
         """Choose dir
@@ -110,10 +104,10 @@ Module Commands
         if module.isdigit():
             num = int(module)
             if num >= len(self.matching_modules_dict["data"]):
-                print(colored("[-]", "red") + " Invalid module index: {}".format(num))
+                lprint("error", "Invalid module index: {}".format(num))
                 return
             module = self.matching_modules_dict["data"][num][1]
-        logging.debug("Use module => {}".format(module))
+        # lprint("debug", "Use module => {}".format(module))
 
         module_import = "modules" + "." + module.replace("/", ".")
         try:
@@ -121,7 +115,7 @@ Module Commands
             used_module.main()
             # used_module.Module().console()
         except ModuleNotFoundError:
-            print(colored("[-]", "red") + " Failed to load module: {}".format(module)) 
+            lprint("error", "Failed to load module: {}".format(module)) 
 
 
     def show_info(self, info):
@@ -204,14 +198,14 @@ Module Commands
         elif command == "show":
             return self.show_info
 
-        print(colored("[-]", "red") + " Unknown command: " + command)
+        lprint("error", " Unknown command: " + command)
 
     def parse_input(self, content_raw):
         """Parse console input content
         """
         content_raw_lines = content_raw.split("\n")
         for content_raw_line in content_raw_lines:
-            logging.debug("Content_raw => {}".format(content_raw_line))
+            # lprint("debug", "Content_raw => {}".format(content_raw_line))
             content_split = re.sub(" +", " ", content_raw_line).split(" ", 1)
             content_split = tuple(filter(lambda x:x!="", content_split))
             if not content_split: yield (None, None); continue
@@ -223,7 +217,7 @@ Module Commands
             command_arg_count = command.__code__.co_argcount - 1
 
             if command_arg_count < 1:
-                logging.debug("Command is {}".format(command_name))
+                # lprint("debug", "Command is {}".format(command_name))
                 yield (command, None); continue
 
             default_parameters = command.__defaults__
@@ -243,15 +237,15 @@ Module Commands
                 required_arg_count = command_arg_count
 
             if args_count < required_arg_count or args_count > command_arg_count:
-                print(colored("[-]", "red") + " Argument required. Args is {}".format(args))
-                print(colored("[*]", "blue") + " Required parameter count is {}".format(required_arg_count))
-                print(colored("[*]", "blue") +
-                    " Parameters name for the {command_name} command are: {args_name}".format(
+                lprint("error", "Argument required. Args is {}".format(args))
+                lprint("info", "Required parameter count is {}".format(required_arg_count))
+                lprint("info",
+                    "Parameters name for the {command_name} command are: {args_name}".format(
                             command_name=command_name,
                             args_name=", ".join(inspect.getfullargspec(command).args[1:])
                         )
                     )
                 yield (None, None); continue
 
-            logging.debug("Funcion is {}, Args is {}".format(command_name, args))
+            # lprint("debug", "Funcion is {}, Args is {}".format(command_name, args))
             yield (command, args)

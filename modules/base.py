@@ -1,6 +1,6 @@
 from lib.core.console import KawaiiInterpreter
 
-from termcolor import colored
+from lib.utils.log import lprint, colored
 from prompt_toolkit.completion import NestedCompleter
 
 class BaseModule(KawaiiInterpreter):
@@ -57,6 +57,6 @@ Exploit Commands
         data = self.global_options_dict["data"]
         for d in data:
             if d[2].lower() == "yes" and d[1] == "":
-                print(colored("[-]") + " Not set " + colored(d[0], "green"))
+                lprint("error",  "Not set " + colored(d[0], "green"))
                 return False
         return True

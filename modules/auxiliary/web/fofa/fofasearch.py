@@ -3,6 +3,7 @@
 import os
 import sys
 
+from lib.utils.log import lprint, colored
 from lib.file import save2csv
 from lib.request import grequests, requests, ProgressSession, HEADERS
 from modules.base import BaseModule
@@ -11,7 +12,6 @@ from base64 import b64encode
 from html import unescape
 
 from faker import Faker
-from termcolor import colored
 from rich import box
 
 class FofaSearch(BaseModule):
@@ -20,7 +20,7 @@ class FofaSearch(BaseModule):
     def __init__(self):
         super(FofaSearch, self).__init__()
         module_type, module_path = __file__.split(self.module_path+os.sep)[-1].replace(".py", "").split(os.sep, 1)
-        using_module = " {module_type}({module_path}) ".format(
+        using_module = "{module_type}({module_path})".format(
                                         module_type=module_type,
                                         module_path=colored(module_path.replace(os.sep, "/"), "red")
                                     )
@@ -112,12 +112,14 @@ class FofaSearch(BaseModule):
             self.PASSWORD = value
         elif key == "ua":
             if value == "random":
-                fake = Faker()
-                self.UA = faker.ua
+                self.UA = Faker().user_agent()
+                self.session.headers["User-Agent"] = self.UA
+            else:
+                self.UA = value
                 self.session.headers["User-Agent"] = self.UA
 
         self.global_options_dict["data"] = self.update_options_data()
-        print(key_raw, "=>", value)
+        lprint(key_raw, "=>", value)
 
     def parse_command(self, command_raw):
         """Parse command
@@ -154,18 +156,18 @@ class FofaSearch(BaseModule):
         elif command == "exploit" or command == "run":
             return self.run
 
-        print(colored("[-]", "red") + " Unknown command: " + command)
+        lprint("error", "Unknown command: " + command)
 
 
     def parse_json_data(self, data_raw, get_total_count=False):
         if self.MODE != "api":
             if not data_raw.get("data"):
-                print(colored("[-]", "red") + " Parse_json_data Error: {}".format(data_raw.get("message")))
+                lprint("error", "Parse_json_data Error: {}".format(data_raw.get("message")))
                 return
 
             if get_total_count:
                 if not data_raw["data"].get("page"):
-                    print(colored("[-]", "red") + " Parse_json_data Error: {}".format(data_raw.get("message")))
+                    lprint("error", "Parse_json_data Error: {}".format(data_raw.get("message")))
                     return
                 else:
                     yield data_raw["data"]["page"].get("total")
@@ -202,12 +204,12 @@ class FofaSearch(BaseModule):
         else:
             if get_total_count:
                 if not data_raw.get("size"):
-                    print(colored("[-]", "red") + " Parse_json_data Error: {}".format(data_raw.get("message")))
+                    lprint("error", "Parse_json_data Error: {}".format(data_raw.get("message")))
                     return
                 yield data_raw.get("size")
                 return
             if not data_raw.get("results"):
-                print(colored("[-]", "red") + " Parse_json_data Error: {}".format(data_raw.get("message")))
+                lprint("error", "Parse_json_data Error: {}".format(data_raw.get("message")))
                 return
             fields_upper = [field.upper() for field in self.FIELDS.split(",")]
             results = data_raw["results"]
@@ -274,7 +276,7 @@ class FofaSearch(BaseModule):
         
 
     def exploit(self):
-        print(colored("[*]", "blue") + " Module started successfully.")
+        lprint("info", "Module started successfully.")
 
         qbase64 = b64encode(self.CONTENT.encode()).decode()
 
@@ -282,12 +284,12 @@ class FofaSearch(BaseModule):
 
         max_page = int(total_count/int(self.PAGESIZE))+1
 
-        print(colored("[*]", "blue") + " Result total count is {}".format(total_count))
-        print(colored("[*]", "blue") + " Max page is {}".format(max_page))
+        lprint("info", "Result total count is {}".format(total_count))
+        lprint("info", "Max page is {}".format(max_page))
 
         if int(self.PAGE) > max_page:
-            print(colored("[*]", "blue") + " The number of pages set is greater than the total number of results.")
-            print(colored("[*]", "blue") + " Set page is {}".format(max_page))
+            lprint("info", "The number of pages set is greater than the total number of results.")
+            lprint("info", "Set page is {}".format(max_page))
 
             self.PAGE = max_page
             self.update_options_data()
@@ -297,14 +299,14 @@ class FofaSearch(BaseModule):
         pn = isPage(self.PAGE)
 
         if not pn:
-            print(colored("[-]", "red") + " PAGE => `{}` not is number.".fotmat(self.PAGE))
+            lprint("error", "PAGE => `{}` not is number.".fotmat(self.PAGE))
             return
 
         result = self.fofa_search(qbase64, pn)
         datas = []
         columns = []
 
-        print(colored("[*]", "blue") + " Search done.")
+        lprint("info", "Search done.")
 
         for data_yield in result:
             for data in data_yield:
@@ -318,7 +320,7 @@ class FofaSearch(BaseModule):
                 datas.append(list(data.values()))
 
         if not datas:
-            print(colored("[-]", "red") + " Search result is null.")
+            lprint("error", "Search result is null.")
             return
 
         datas_dict = {

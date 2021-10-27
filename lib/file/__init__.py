@@ -2,7 +2,7 @@ import os
 import csv
 import codecs
 
-from termcolor import colored
+from lib.utils.log import lprint
 
 output_path = "outputs"+os.sep
 
@@ -18,9 +18,9 @@ def save2csv(filename, title, datas):
 
             writer.writerows(datas)
 
-        print(colored("[*]", "blue"), "Write Success")
+        lprint("info", "Write Success")
     except PermissionError:
-        print(colored("[*]", "red"), "Write Failed, The file is being used.")
+        lprint("error",  "Write Failed, The file is being used.")
         rewrite = input("Whether to rewrite?[Y/n]")
         if rewrite.lower() != "y":
             return
