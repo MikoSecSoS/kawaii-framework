@@ -1,10 +1,7 @@
 prompt_toolkit
 grequests
-requests
-colorma
-logging
+colorama
 rich
 faker
 termcolor
-colorama
 bs4
