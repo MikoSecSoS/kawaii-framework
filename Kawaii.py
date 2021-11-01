@@ -5,10 +5,6 @@ import os
 import re
 import sys
 
-# import logging
-# logging.basicConfig(level=logging.INFO,
-#             format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
-
 from lib.core.console import KawaiiInterpreter
 from lib.config import __banner__
 

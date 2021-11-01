@@ -4,4 +4,4 @@ colorama
 rich
 faker
 termcolor
-bs4
+tqdm
