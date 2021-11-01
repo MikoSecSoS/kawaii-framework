@@ -110,10 +110,9 @@ Module Commands
         # lprint("debug", "Use module => {}".format(module))
 
         module_import = "modules" + "." + module.replace("/", ".")
-        lprint(module_import)
         try:
             used_module = import_module(module_import)
-        except ModuleNotFoundError:
+        except ModuleNotFoundError as e:
             lprint("error", "Failed to load module: {}".format(module))
             return
         used_module.main()
