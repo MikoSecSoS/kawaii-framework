@@ -3,13 +3,12 @@
 from lib.core.base import BaseInterpreter
 from lib.core.parser import Parser
 
-from rich import box
 from prompt_toolkit import ANSI
 
 class KawaiiInterpreter(Parser):
     """docstring for KawaiiInterpreter"""
     def __init__(self):
-        super(KawaiiInterpreter, self).__init__()  
+        super(KawaiiInterpreter, self).__init__()
 
     def console(self):
         while 1:

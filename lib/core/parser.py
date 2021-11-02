@@ -91,9 +91,9 @@ Module Commands
         """
         key = key_raw.lower()
         if key == "prompt":
-            prompt = value
+            self.prompt = value
         elif key == "promptchar":
-            prompt_char = value
+            self.prompt_char = value
 
         print(key_raw, "=>", value)
 
