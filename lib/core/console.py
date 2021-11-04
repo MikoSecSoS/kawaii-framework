@@ -13,7 +13,7 @@ class KawaiiInterpreter(Parser):
     def console(self):
         while 1:
             try:
-                prompt_list = [i for i in (self.global_options_dict["data"]["prompt"][0]["default"], self.using_module, self.global_options_dict["data"]["promptchar"]["default"]) if i]
+                prompt_list = [i for i in (self.global_options_dict["data"]["prompt"]["default"], self.using_module, self.global_options_dict["data"]["promptchar"]["default"]) if i]
                 prompt_text = " ".join(prompt_list)+" "
                 content = self.prompt_session.prompt(ANSI(prompt_text), completer=self.completer)
                 if content == "q": exit()

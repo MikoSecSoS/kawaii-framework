@@ -5,8 +5,13 @@ import sys
 
 from base64 import b64encode
 from html import unescape
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
 
 from faker import Faker
+from rich import box
 
 from lib.utils.log import lprint, colored
 from lib.file import save2csv
@@ -48,14 +53,16 @@ class FofaSearch(BaseModule):
 
 
     def parse_json_data(self, data_raw, get_total_count=False):
-        if self.MODE != "api":
+        if self.module_options_dict["data"]["MODE"]["default"] != "api":
             if not data_raw.get("data"):
                 lprint("error", "Parse_json_data Error: {}".format(data_raw.get("message")))
+                yield None
                 return
 
             if get_total_count:
                 if not data_raw["data"].get("page"):
                     lprint("error", "Parse_json_data Error: {}".format(data_raw.get("message")))
+                    yield None
                     return
                 else:
                     yield data_raw["data"]["page"].get("total")
@@ -93,69 +100,62 @@ class FofaSearch(BaseModule):
             if get_total_count:
                 if not data_raw.get("size"):
                     lprint("error", "Parse_json_data Error: {}".format(data_raw.get("message")))
+                    yield None
                     return
                 yield data_raw.get("size")
                 return
             if not data_raw.get("results"):
                 lprint("error", "Parse_json_data Error: {}".format(data_raw.get("message")))
+                yield None
                 return
-            fields_upper = [field.upper() for field in self.FIELDS.split(",")]
+            fields_upper = [field.upper() for field in self.module_options_dict["data"]["FIELDS"]["default"].split(",")]
             results = data_raw["results"]
             for result in results:
                 data_dict = {k:v for k,v in zip(fields_upper, result)}
                 yield data_dict
 
-    def get_result_total_count(self, qbase64):
-        if self.MODE != "api":
+    def get_params(self, qbase64, pn, mode):
+        if mode != "api":
             params = {
-                "q": self.CONTENT,
+                "q": self.module_options_dict["data"]["CONTENT"]["default"],
                 "qbase64": qbase64,
-                "full": self.FULL,
-                "pn": "1",
-                "ps": self.PAGESIZE
+                "full": self.module_options_dict["data"]["FULL"]["default"],
+                "pn": pn,
+                "ps": self.module_options_dict["data"]["PAGESIZE"]["default"]
             }
-            req = self.session.get(self.fofa_search_url, params=params)
-            return next(self.parse_json_data(req.json(), get_total_count=True))
         else:
             params = {
-                "email": self.EMAIL,
-                "key": self.KEY,
+                "email": self.module_options_dict["data"]["EMAIL"]["default"],
+                "key": self.module_options_dict["data"]["KEY"]["default"],
                 "qbase64": qbase64,
-                "full": self.FULL,
-                "page": "1",
-                "size": self.PAGESIZE,
-                "fields": self.FIELDS
+                "full": self.module_options_dict["data"]["FULL"]["default"],
+                "page": pn,
+                "size": self.module_options_dict["data"]["PAGESIZE"]["default"],
+                "fields": self.module_options_dict["data"]["FIELDS"]["default"]
             }
-            req = self.session.get(self.fofa_key_searh_url, params=params)
-            return next(self.parse_json_data(req.json(), get_total_count=True))
+        return params
 
-    def fofa_search(self, qbase64, pn):
+    def get_result_total_count(self, qbase64, mode):
+        params = self.get_params(qbase64, 1, mode)
+        if mode != "api":
+            req = self.session.get(self.fofa_search_url, params=params)
+        else:
+            req = self.session.get(self.fofa_key_searh_url, params=params)
+        total_count_yield = self.parse_json_data(req.json(), get_total_count=True)
+        if isinstance(total_count_yield, Iterable):
+            return next(total_count_yield)
+
+    def fofa_search(self, qbase64, pn, mode):
         if pn == 1:
             return
         with ProgressSession(pn-1, self.session) as sess:
             req_list = []
             for pn in range(1, pn):
-                if self.MODE != "api":
-                    params = {
-                        "q": self.CONTENT,
-                        "qbase64": qbase64,
-                        "full": self.FULL,
-                        "pn": pn,
-                        "ps": self.PAGESIZE
-                    }
+                params = self.get_params(qbase64, pn, mode)
+                if mode != "api":
                     req = grequests.get(self.fofa_search_url, params=params, session=sess)
                 else:
-                    params = {
-                        "email": self.EMAIL,
-                        "key": self.KEY,
-                        "qbase64": qbase64,
-                        "full": self.FULL,
-                        "page": pn,
-                        "size": self.PAGESIZE,
-                        "fields": self.FIELDS
-                    }
                     req = grequests.get(self.fofa_key_searh_url, params=params, session=sess)
-
                 req_list.append(req)
             res_list = grequests.map(req_list)
             for res in res_list:
@@ -165,38 +165,43 @@ class FofaSearch(BaseModule):
     def exploit(self):
         lprint("info", "Module started successfully.")
 
-        qbase64 = b64encode(self.CONTENT.encode()).decode()
+        qbase64 = b64encode(self.module_options_dict["data"]["CONTENT"]["default"].encode()).decode()
 
-        total_count = self.get_result_total_count(qbase64)
+        mode = self.module_options_dict["data"]["MODE"]["default"]
 
-        max_page = int(total_count/int(self.PAGESIZE))+1
+        total_count = self.get_result_total_count(qbase64, mode)
+        if not total_count: return
+
+        max_page = int(total_count/int(self.module_options_dict["data"]["PAGESIZE"]["default"]))+1
 
         lprint("info", "Result total count is {}".format(total_count))
         lprint("info", "Max page is {}".format(max_page))
 
-        if int(self.PAGE) > max_page:
+        if int(self.module_options_dict["data"]["PAGE"]["default"]) > max_page:
             lprint("info", "The number of pages set is greater than the total number of results.")
             lprint("info", "Set page is {}".format(max_page))
 
-            self.PAGE = max_page
+            self.module_options_dict["data"]["PAGE"]["default"] = max_page
             self.update_options_data()
 
         isPage = lambda n: int(n)+1 if n.isdigit() else 0
 
-        pn = isPage(self.PAGE)
+        pn = isPage(self.module_options_dict["data"]["PAGE"]["default"])
 
         if not pn:
-            lprint("error", "PAGE => `{}` not is number.".fotmat(self.PAGE))
+            lprint("error", "PAGE => `{}` not is number.".format(self.module_options_dict["data"]["PAGE"]["default"]))
             return
 
-        result = self.fofa_search(qbase64, pn)
-        datas = []
+        result = self.fofa_search(qbase64, pn, mode)
+        datas = {}
         columns = []
 
         lprint("info", "Search done.")
 
+        n = 0
         for data_yield in result:
             for data in data_yield:
+                n += 1
                 if not columns:
                     for key in data.keys():
                         columns.append({
@@ -204,7 +209,7 @@ class FofaSearch(BaseModule):
                             "justify": "center",
                             "overflow": "ignore"
                         })
-                datas.append(list(data.values()))
+                datas[str(n)] = data
 
         if not datas:
             lprint("error", "Search result is null.")
@@ -218,10 +223,10 @@ class FofaSearch(BaseModule):
                 "box": box.HEAVY_HEAD
             },
             "columns": list(columns),
-            "data": list(datas)
+            "data": datas
         }
-        if self.FILE.lower().endswith(".csv"):
-            save2csv(self.FILE, [col["header"] for col in columns], datas)
+        if self.module_options_dict["data"]["FILE"]["default"].lower().endswith(".csv"):
+            save2csv(self.module_options_dict["data"]["FILE"]["default"], [col["header"] for col in columns], datas)
         self.rich_print_table(datas_dict)
 
 

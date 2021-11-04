@@ -85,13 +85,17 @@ Module Commands
         """
         if not option:
             self.rich_print_table(self.global_options_dict)
+        elif option == "module":
+            self.rich_print_table(self.module_options_dict)
 
-    def set_command(self, key_raw, value):
+    def set_command(self, key, value):
         """Set key => value
         """
-        key = key_raw.lower()
-        self.global_options_dict["data"][key] = value
-        lprint(key_raw, "=>", value)
+        if key in self.global_options_dict["data"]:
+            self.global_options_dict["data"][key]["default"] = value
+        elif key in self.module_options_dict["data"]:
+            self.module_options_dict["data"][key]["default"] = value
+        lprint(key, "=>", value)
 
 
     def use_module(self, module):
@@ -119,7 +123,10 @@ Module Commands
         """Show info
         """
         if info == "options":
-            self.options()
+            if self.module_options_dict:
+                self.options("module")
+            else:
+                self.options()
         elif info == "version":
             self.show_version()
 
@@ -141,6 +148,10 @@ Module Commands
         """Exec python code
         """
         exec(code)
+
+    def clear_screen(self):
+        lprint("\x1b[2J")
+
 
     def rich_print_table(self, info_dict):
             """Show table
@@ -173,6 +184,8 @@ Module Commands
             return None
         elif command == "cd":
             return self.chdir
+        elif command == "clear" or command == "cls":
+            return self.clear_screen
         elif command == "eval":
             return self.eval_code
         elif command == "exec":

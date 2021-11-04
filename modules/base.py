@@ -13,28 +13,26 @@ class BaseModule(KawaiiInterpreter):
         super(BaseModule, self).__init__()
     
     def initialization(self, data):
-        self.global_options_dict["title"] = {
+        self.module_options_dict["title"] = {
                 "title": "Module options ({})".format(self.using_module),
                 "show_header": True,
                 "style": "bold",
                 "box": box.MINIMAL_DOUBLE_HEAD
             }
-        self.global_options_dict["columns"] = [{
-                    "header": "Name",
-                },{
-                    "header":"Current Setting",
-                },{
-                    "header":"Required",
-                },{
-                    "header":"Description",
-                }
-            ],
-        self.global_options_dict["data"] = CIMultiDict()
-        for k,v in data.items():
-            self.global_options_dict["data"][k] = v
+        self.module_options_dict["columns"] = [{
+                "header": "Name",
+            },{
+                "header":"Current Setting",
+            },{
+                "header":"Required",
+            },{
+                "header":"Description",
+            }
+        ]
+        self.module_options_dict["data"] = CIMultiDict(**data)
         
         options = self.completer.options
-        options["set"] = {data[0]:None for data in self.global_options_dict["data"]}
+        options["set"] = {data:None for data in self.module_options_dict["data"]}
         self.completer = NestedCompleter.from_nested_dict(options)
 
     def help(self):
@@ -77,10 +75,10 @@ Exploit Commands
         print(info)
 
     def check_options(self):
-        data = self.global_options_dict["data"]
-        for d in data:
-            if d[2].lower() == "yes" and d[1] == "":
-                lprint("error",  "Not set " + colored(d[0], "green"))
+        data = self.module_options_dict["data"]
+        for k,v in data.items():
+            if v["required"].lower() == "yes" and v["default"] == "":
+                lprint("error",  "Not set " + colored(k, "green"))
                 return False
         return True
 
@@ -99,7 +97,7 @@ Exploit Commands
         elif command == "exec":
             return self.exec_system_command
         elif command == "exit" or command == "quit":
-            sys.exit(0)
+            exit()
         elif command == "help" or command == "?":
             return self.help
         elif command == "history":
@@ -121,7 +119,7 @@ Exploit Commands
 
         lprint("error", "Unknown command: " + command)
 
-    def run(self, exploit):
+    def run(self):
         check_out = self.check_options()
         if check_out:
-            exploit()
+            self.exploit()

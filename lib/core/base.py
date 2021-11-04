@@ -28,6 +28,8 @@ class BaseInterpreter(object):
         self.prompt_char = ">"
         self.module_path = "modules"
 
+        self.module_options_dict = dict()
+
         self.global_options_dict = dict()
         self.global_options_dict["title"] = {
             "title": "Global Options",
@@ -45,12 +47,12 @@ class BaseInterpreter(object):
         ]
         self.global_options_dict["data"] = CIMultiDict()
 
-        self.global_options_dict["data"]["Prompt"] = {"default": "Kawaii", "description": "The prompt string"},
+        self.global_options_dict["data"]["Prompt"] = {"default": "Kawaii", "description": "The prompt string"}
         self.global_options_dict["data"]["PromptChar"] = {"default": ">", "description": "The prompt character"}
         
         
         self.completer = NestedCompleter.from_nested_dict({
-            "set": {data[0]:None for data in self.global_options_dict["data"]},
+            "set": {data:None for data in self.global_options_dict["data"]},
             "show": {
                 "version": None,
                 "options": None,
