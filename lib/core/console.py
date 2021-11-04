@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from prompt_toolkit import ANSI
+
 from lib.core.base import BaseInterpreter
 from lib.core.parser import Parser
-
-from prompt_toolkit import ANSI
 
 class KawaiiInterpreter(Parser):
     """docstring for KawaiiInterpreter"""
@@ -13,7 +13,7 @@ class KawaiiInterpreter(Parser):
     def console(self):
         while 1:
             try:
-                prompt_list = [i for i in (self.prompt, self.using_module, self.prompt_char) if i]
+                prompt_list = [i for i in (self.global_options_dict["data"]["prompt"][0]["default"], self.using_module, self.global_options_dict["data"]["promptchar"]["default"]) if i]
                 prompt_text = " ".join(prompt_list)+" "
                 content = self.prompt_session.prompt(ANSI(prompt_text), completer=self.completer)
                 if content == "q": exit()

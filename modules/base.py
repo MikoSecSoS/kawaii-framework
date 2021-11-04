@@ -1,8 +1,11 @@
-from lib.core.console import KawaiiInterpreter
-from lib.utils.log import lprint, colored
+# -*- coding:utf-8 -*-
 
 from prompt_toolkit.completion import NestedCompleter
+from multidict import CIMultiDict
 from rich import box
+
+from lib.core.console import KawaiiInterpreter
+from lib.utils.log import lprint, colored
 
 class BaseModule(KawaiiInterpreter):
     """docstring for BaseModule"""
@@ -10,14 +13,13 @@ class BaseModule(KawaiiInterpreter):
         super(BaseModule, self).__init__()
     
     def initialization(self, data):
-        self.global_options_dict = {
-            "title": {
+        self.global_options_dict["title"] = {
                 "title": "Module options ({})".format(self.using_module),
                 "show_header": True,
                 "style": "bold",
                 "box": box.MINIMAL_DOUBLE_HEAD
-            },
-            "columns": [{
+            }
+        self.global_options_dict["columns"] = [{
                     "header": "Name",
                 },{
                     "header":"Current Setting",
@@ -27,8 +29,10 @@ class BaseModule(KawaiiInterpreter):
                     "header":"Description",
                 }
             ],
-            "data": data
-        }
+        self.global_options_dict["data"] = CIMultiDict()
+        for k,v in data.items():
+            self.global_options_dict["data"][k] = v
+        
         options = self.completer.options
         options["set"] = {data[0]:None for data in self.global_options_dict["data"]}
         self.completer = NestedCompleter.from_nested_dict(options)

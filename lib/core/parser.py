@@ -5,14 +5,14 @@ import re
 import sys
 import inspect
 
-from lib.utils.log import lprint, colored
-from lib.config import __version__
-from lib.core.base import BaseInterpreter
-
 from importlib import import_module
 
 from rich.table import Table
 from rich.console import Console
+
+from lib.utils.log import lprint, colored
+from lib.config import __version__
+from lib.core.base import BaseInterpreter
 
 class Parser(BaseInterpreter):
     """docstring for Parser"""
@@ -67,8 +67,8 @@ Module Commands
                 path = os.path.join(root, file)
                 if module in path and path.split(".")[-1] == "py":
                     name = path.split(os.sep, 1)[1].replace(os.sep, "/")[:-3]
-                    data = [str(n), name]
-                    self.matching_modules_dict["data"].append(data)
+                    data = {"name": name}
+                    self.matching_modules_dict["data"][str(n)] = data
                     n += 1
         if self.matching_modules_dict["data"]:
             self.rich_print_table(self.matching_modules_dict)
@@ -90,23 +90,19 @@ Module Commands
         """Set key => value
         """
         key = key_raw.lower()
-        if key == "prompt":
-            self.prompt = value
-        elif key == "promptchar":
-            self.prompt_char = value
-
-        print(key_raw, "=>", value)
+        self.global_options_dict["data"][key] = value
+        lprint(key_raw, "=>", value)
 
 
     def use_module(self, module):
         """Use module
         """
         if module.isdigit():
-            num = int(module)
-            if num >= len(self.matching_modules_dict["data"]):
+            num = module
+            if int(num) >= len(self.matching_modules_dict["data"]):
                 lprint("error", "Invalid module index: {}".format(num))
                 return
-            module = self.matching_modules_dict["data"][num][1]
+            module = self.matching_modules_dict["data"][num]["name"]
         # lprint("debug", "Use module => {}".format(module))
 
         module_import = "modules" + "." + module.replace("/", ".")
@@ -160,8 +156,9 @@ Module Commands
             for column in column_list:
                 table.add_column(**column)
 
-            for data in datas:
-                table.add_row(*data)
+            for name, value in datas.items():
+                tmp = [name]+list(value.values())
+                table.add_row(*tmp)
 
             console = Console()
             console.print(table)

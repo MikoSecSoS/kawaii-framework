@@ -3,15 +3,15 @@
 import os
 import sys
 
-from lib.utils.log import lprint, colored
-from lib.file import save2csv
-from lib.request import grequests, requests, ProgressSession, HEADERS
-from modules.base import BaseModule
-
 from base64 import b64encode
 from html import unescape
 
 from faker import Faker
+
+from lib.utils.log import lprint, colored
+from lib.file import save2csv
+from lib.request import grequests, requests, ProgressSession, HEADERS
+from modules.base import BaseModule
 
 class FofaSearch(BaseModule):
     """docstring for FofaSearch"""
@@ -24,45 +24,27 @@ class FofaSearch(BaseModule):
                                         module_path=colored(module_path.replace(os.sep, "/"), "red")
                                     )
         self.using_module = using_module
-        #---------------------------Module options-----------------------------------
-        self.CONTENT = ""
-        self.AUTH = ""
-        self.EMAIL = ""
-        self.FILE = ""
-        self.FIELDS = "host,title,ip,domain,port,protocol,server,fid"
-        self.FULL = "false"
-        self.KEY = ""
-        self.MODE = "none"
-        self.PAGE = "0"
-        self.PAGESIZE = "10"
-        self.PASSWORD = ""
-
-        self.UA = HEADERS.UA
         #---------------------------Module variable----------------------------------
         self.fofa_search_url = "https://api.fofa.so/v1/search"
         self.fofa_key_searh_url = "https://fofa.so/api/v1/search/all"
         self.session = requests.Session()
-        self.session.headers["User-Agent"] = self.UA
+        self.session.headers["User-Agent"] = HEADERS.UA
         #----------------------------------------------------------------------------
         
-        self.initialization(self.update_options_data())
-
-        
-    def update_options_data(self):
-        return [
-            ["AUTH", self.AUTH, "No", "Fofa Authorization"],
-            ["CONTENT", self.CONTENT, "Yes", "Fofa search content"],
-            ["EMAIL", self.EMAIL, "No", "Fofa email"],
-            ["FILE", self.FILE, "No", "Fofa search output file.(csv)"],
-            ["FIELDS", self.FIELDS, "No", "Fofa api fields"],
-            ["FULL", self.FULL, "No", "Fofa search show full(true/false)"],
-            ["KEY", self.KEY, "No", "Fofa key"],
-            ["MODE", self.MODE, "Yes", "Login fofa mode(none, auth, account, api)"],
-            ["PAGE", self.PAGE, "Yes", "Fofa search page"],
-            ["PAGESIZE", self.PAGESIZE, "No", "Fofa search result size.(10, 20)"],
-            ["PASSWD", self.PASSWORD, "No", "Fofa password"],
-            ["UA", self.UA, "No", "Request User-Agent(random)"],
-        ]
+        self.initialization({
+            "AUTH": {"default": "", "required": "No", "description": "Fofa Authorization"},
+            "CONTENT": {"default": "", "required": "Yes", "description": "Fofa search content"},
+            "EMAIL": {"default": "", "required": "No", "description": "Fofa email"},
+            "FILE": {"default": "", "required": "No", "description": "Output file.(.csv)"},
+            "FIELDS": {"default": "host,title,ip,domain,port,protocol,server,fid", "required": "No", "description": "Fofa api fields"},
+            "FULL": {"default": "false", "required": "No", "description": "Fofa search show full(true/false)"},
+            "KEY": {"default": "", "required": "No", "description": "Fofa key"},
+            "MODE": {"default": "none", "required": "Yes", "description": "Login fofa mode(none, auth, account, api)"},
+            "PAGE": {"default": "0", "required": "Yes", "description": "Fofa search page"},
+            "PAGESIZE": {"default": "10", "required": "Yes", "description": "Fofa search result size."},
+            "PASSWD": {"default": "", "required": "No", "description": "Fofa password"},
+            "UA": {"default": HEADERS.UA, "required": "Yes", "description": "Request User-Agent(random)"},
+        })
 
 
     def parse_json_data(self, data_raw, get_total_count=False):
@@ -179,40 +161,6 @@ class FofaSearch(BaseModule):
             for res in res_list:
                 if res:
                     yield self.parse_json_data(res.json())
-        
-    def set_command(self, key_raw, value):
-        key = key_raw.lower()
-        elif key == "content":
-            self.CONTENT = value
-        elif key == "auth":
-            self.AUTH = value
-            self.session.headers["Authorization"] = self.AUTH
-        elif key == "email":
-            self.EMAIL = value
-        elif key == "key":
-            self.KEY = value
-        elif key == "mode":
-            self.MODE = value
-        elif key == "file":
-            self.FILE = value
-        elif key == "fields":
-            self.FIELDS = value
-        elif key == "page":
-            self.PAGE = value
-        elif key == "pagesize":
-            self.PAGESIZE = value
-        elif key == "passwd":
-            self.PASSWORD = value
-        elif key == "ua":
-            if value == "random":
-                self.UA = Faker().user_agent()
-                self.session.headers["User-Agent"] = self.UA
-            else:
-                self.UA = value
-                self.session.headers["User-Agent"] = self.UA
-
-        self.global_options_dict["data"] = self.update_options_data()
-        lprint(key_raw, "=>", value)
 
     def exploit(self):
         lprint("info", "Module started successfully.")
