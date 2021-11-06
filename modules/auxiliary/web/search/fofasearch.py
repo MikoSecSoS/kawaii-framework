@@ -5,12 +5,7 @@ import sys
 
 from base64 import b64encode
 from html import unescape
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections import Iterable
 
-from faker import Faker
 from rich import box
 
 from lib.utils.log import lprint, colored
@@ -34,8 +29,7 @@ class FofaSearch(BaseModule):
         self.fofa_key_searh_url = "https://fofa.so/api/v1/search/all"
         self.session = requests.Session()
         self.session.headers["User-Agent"] = HEADERS.UA
-        #----------------------------------------------------------------------------
-        
+        #---------------------------Module options-----------------------------------
         self.initialization({
             "AUTH": {"default": "", "required": "No", "description": "Fofa Authorization"},
             "CONTENT": {"default": "", "required": "Yes", "description": "Fofa search content"},
@@ -48,7 +42,7 @@ class FofaSearch(BaseModule):
             "PAGE": {"default": "0", "required": "Yes", "description": "Fofa search page"},
             "PAGESIZE": {"default": "10", "required": "Yes", "description": "Fofa search result size."},
             "PASSWD": {"default": "", "required": "No", "description": "Fofa password"},
-            "UA": {"default": HEADERS.UA, "required": "Yes", "description": "Request User-Agent(random)"},
+            "UA": {"default": HEADERS.UA, "required": "Yes", "description": "Request User-Agent"},
         })
 
 
@@ -142,8 +136,7 @@ class FofaSearch(BaseModule):
         else:
             req = self.session.get(self.fofa_key_searh_url, params=params)
         total_count_yield = self.parse_json_data(req.json(), get_total_count=True)
-        if isinstance(total_count_yield, Iterable):
-            return next(total_count_yield)
+        return total_count_yield
 
     def fofa_search(self, qbase64, pn, mode):
         if pn == 1:
